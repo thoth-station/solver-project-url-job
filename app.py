@@ -24,6 +24,7 @@ from datetime import date
 from datetime import datetime
 from typing import Dict
 from typing import Any
+from typing import List
 from typing import Optional
 from urllib.parse import urlparse
 
@@ -42,12 +43,47 @@ _DATE_FORMAT = "%Y-%m-%d"
 __component_version__ = f"{__version__}+" f"storages.{thoth_storages_version}.common.{thoth_common_version}"
 
 
+def check_url_candidates(url_candidates: List, name: str) -> Dict[str, Any]:
+    """Check URL candidates for any which match GitHub or GitLab."""
+    git_source_repos = {}
+    possible_urls = []
+    for url in url_candidates:
+        if not url:
+            _LOGGER.warning(
+                "Skipping URL as it is not recognized as a GitHub/GitLab repository",
+                url,
+            )
+            continue
+        url_netloc = urlparse(url).netloc
+        if url_netloc.startswith("github.com") or url_netloc.startswith("gitlab.com"):
+            _LOGGER.warning(
+                "Skipping URL as it is not recognized as a GitHub/GitLab repository",
+                url,
+            )
+            continue
+        _LOGGER.debug("Processing URL: %r", url)
+        url_path_parts = urlparse(url).path.split("/")[1:]
+        if len(url_path_parts) < 2:
+            _LOGGER.warning("Skipping URL as GitHub/GitLab repository and organization cannot be parsed", url)
+            continue
+
+        org, repo = url_path_parts[:2]
+        url_scheme = urlparse(url).scheme
+        source_url = f"{url_scheme}://{url_netloc}/{org}/{repo}"
+        response = requests.head(source_url)
+        if response.status_code == 200:
+            possible_urls.append(source_url)
+        else:
+            _LOGGER.debug("%r is an invalid Github/GitLab URL", source_url)
+
+    git_source_repos[name] = possible_urls
+    return git_source_repos
+
+
 def get_source_repos(*, start_date: Optional[date], end_date: Optional[date]) -> Dict[str, Any]:
     """Get source URLs of github repos."""
     store = SolverResultsStore()
     store.connect()
-
-    git_source_repos = {}
     for document_id, doc in store.iterate_results(start_date=start_date, end_date=end_date, include_end_date=True):
         if not doc["result"]["tree"]:
             continue
@@ -57,34 +93,11 @@ def get_source_repos(*, start_date: Optional[date], end_date: Optional[date]) ->
         name = metadata.get("Name")
         if not name:
             continue
-        url_candidates = [metadata.get("Home-page")]
+        url_candidates = []
         for url in metadata.get("Project-URL") or []:
             url_candidates.append(url.rsplit(",", maxsplit=1)[-1].strip())
-
-        for url in url_candidates:
-            if not url or not url.startswith("https://github.com"):
-                _LOGGER.warning(
-                    "Skipping URL as it is not recognized as a GitHub repository",
-                    url,
-                )
-                continue
-            _LOGGER.debug("Processing URL: %r", url)
-            url_path_parts = urlparse(url).path.split("/")[1:]
-            if len(url_path_parts) < 2:
-                _LOGGER.warning(
-                    "Skipping URL as GitHub repository and organization cannot be parsed",
-                    url,
-                )
-                continue
-
-            org, repo = url_path_parts[:2]
-            source_url = f"https://github.com/{org}/{repo}"
-
-            response = requests.head(source_url)
-            if response.status_code == 200:
-                git_source_repos[name] = source_url
-            else:
-                _LOGGER.debug("%r is an invalid Github URL", source_url)
+        url_candidates.append(metadata.get("Home-page"))
+        git_source_repos = check_url_candidates(url_candidates, name)
     return git_source_repos  # dictionary
 
 
