@@ -31,14 +31,15 @@ import requests
 import click
 import yaml
 from thoth.common import init_logging
+from thoth.common import __version__ as thoth_common_version
 from thoth.storages import SolverResultsStore
+from thoth.storages import __version__ as thoth_storages_version
 
 init_logging()
-_LOGGER = logging.getLogger("thoth.prescriptions.gh_release_notes")
-_LOGGER.setLevel(logging.INFO)
+_LOGGER = logging.getLogger("thoth.solver_project_url")
 _DATE_FORMAT = "%Y-%m-%d"
 
-__component_version__ = f"{__version__}"
+__component_version__ = f"{__version__}+" f"storages.{thoth_storages_version}.common.{thoth_common_version}"
 
 
 def get_source_repos(*, start_date: Optional[date], end_date: Optional[date]) -> Dict[str, Any]:
@@ -62,6 +63,10 @@ def get_source_repos(*, start_date: Optional[date], end_date: Optional[date]) ->
 
         for url in url_candidates:
             if not url or not url.startswith("https://github.com"):
+                _LOGGER.warning(
+                    "Skipping URL as it is not recognized as a GitHub repository",
+                    url,
+                )
                 continue
             _LOGGER.debug("Processing URL: %r", url)
             url_path_parts = urlparse(url).path.split("/")[1:]
@@ -84,11 +89,11 @@ def get_source_repos(*, start_date: Optional[date], end_date: Optional[date]) ->
 
 
 def _print_version(ctx: click.Context, _, value: str):
-    """Print adviser version and exit."""
+    """Print version and exit."""
     if not value or ctx.resilient_parsing:
         return
 
-    click.echo(__version__)
+    click.echo(__component_version__)
     ctx.exit()
 
 
@@ -98,7 +103,7 @@ def _print_version(ctx: click.Context, _, value: str):
     "-v",
     "--verbose",
     is_flag=True,
-    envvar="THOTH_GET_SOURCE_REPOS_DEBUG",
+    envvar="THOTH_SOLVER_PROJECT_URL_DEBUG",
     help="Be verbose about what's going on.",
 )
 @click.option(
@@ -154,24 +159,12 @@ def cli(
 
     urls = get_source_repos(start_date=start_date_converted, end_date=end_date_converted)
 
-    result = {
-        "apiVersion": "thoth-station.ninja/v1",
-        "kind": "prescription",
-        "spec": {
-            "name": "gh-source-repos",
-            "release": datetime.strftime(datetime.now(), "%Y.%m.%d"),
-            "units": {
-                "wraps": urls,
-            },
-        },
-    }
-
     if output == "-" or not output:
-        yaml.safe_dump(result, sys.stdout)
+        yaml.safe_dump(urls, sys.stdout)
     else:
         _LOGGER.info("Writing results computed to %r", output)
         with open(output, "w") as f:
-            yaml.safe_dump(result, f)
+            yaml.safe_dump(urls, f)
 
 
 __name__ == "__main__" and cli()

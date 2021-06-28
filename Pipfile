@@ -4,8 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
+pyyaml = "*"
+"thoth.common" = "*"
+click = "*"
+"thoth.storages" = "*"
+requests = "*"
 
 [dev-packages]
 
 [requires]
-python_version = "3.9"
+python_version = "3.8"
