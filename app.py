@@ -50,7 +50,7 @@ def check_url_candidates(url_candidates: List, name: str) -> Dict[str, Any]:
     for url in url_candidates:
         if not url:
             _LOGGER.warning(
-                "Skipping URL as it is not recognized as a GitHub/GitLab repository",
+                "Skipping URL as it is not recognized as a GitHub/GitLab repository: %r",
                 url,
             )
             continue
