@@ -57,24 +57,27 @@ def check_url_candidates(url_candidates: List, name: str) -> Dict[str, Any]:
         url_netloc = urlparse(url).netloc
         if url_netloc.startswith("github.com") or url_netloc.startswith("gitlab.com"):
             _LOGGER.warning(
-                "Skipping URL as it is not recognized as a GitHub/GitLab repository",
+                "Skipping URL as it is not recognized as a GitHub/GitLab repository: %r",
                 url,
             )
             continue
         _LOGGER.debug("Processing URL: %r", url)
         url_path_parts = urlparse(url).path.split("/")[1:]
         if len(url_path_parts) < 2:
-            _LOGGER.warning("Skipping URL as GitHub/GitLab repository and organization cannot be parsed", url)
+            _LOGGER.warning("Skipping URL as GitHub/GitLab repository and organization cannot be parsed: %r", url)
             continue
 
         org, repo = url_path_parts[:2]
         url_scheme = urlparse(url).scheme
         source_url = f"{url_scheme}://{url_netloc}/{org}/{repo}"
-        response = requests.head(source_url)
-        if response.status_code == 200:
-            possible_urls.append(source_url)
-        else:
-            _LOGGER.debug("%r is an invalid Github/GitLab URL", source_url)
+        try:
+            response = requests.head(source_url)
+            if response.status_code == 200:
+                possible_urls.append(source_url)
+            else:
+                _LOGGER.debug("%r is an invalid Github/GitLab URL", source_url)
+        except Exception:
+            _LOGGER.exception("Failed to obtain %r with requests.head()", source_url)
 
     git_source_repos[name] = possible_urls
     return git_source_repos
