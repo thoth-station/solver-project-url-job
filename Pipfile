@@ -7,7 +7,7 @@ name = "pypi"
 pyyaml = "*"
 thoth-common = "*"
 click = "*"
-"thoth.storages" = "*"
+thoth-storages = "*"
 requests = "*"
 
 [dev-packages]
