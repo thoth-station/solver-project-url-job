@@ -5,3 +5,17 @@
 ### Added
 
 all the things that you see...
+
+## Release 0.1.1 (2021-07-01T15:17:10)
+### Features
+* Allow Bjoern to make new versions
+* Add Bjoern to the approval listing
+* Configure AICoE-CI
+* Update Pipfile
+* Update Pipfile
+* Update app.py
+* added try except around request.head
+* changed priority ordering of URLs and added functionality to detect gitlab
+* added logic for parsing git repo from solver
+### Improvements
+* edited Pipfile and added minor changes
