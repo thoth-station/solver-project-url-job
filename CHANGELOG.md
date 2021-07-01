@@ -19,3 +19,7 @@ all the things that you see...
 * added logic for parsing git repo from solver
 ### Improvements
 * edited Pipfile and added minor changes
+
+## Release 0.1.2 (2021-07-01T16:14:16)
+### Features
+* added matching version for thoth-storages in Pipfile.lock
