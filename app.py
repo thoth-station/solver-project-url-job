@@ -55,7 +55,7 @@ def check_url_candidates(url_candidates: List, name: str) -> Dict[str, Any]:
             )
             continue
         url_netloc = urlparse(url).netloc
-        if url_netloc.startswith("github.com") or url_netloc.startswith("gitlab.com"):
+        if not url_netloc.startswith("github.com") and not url_netloc.startswith("gitlab.com"):
             _LOGGER.warning(
                 "Skipping URL as it is not recognized as a GitHub/GitLab repository: %r",
                 url,
