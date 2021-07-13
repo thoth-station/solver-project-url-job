@@ -75,7 +75,7 @@ def check_url_candidates(url_candidates: List, name: str) -> Dict[str, Any]:
             if response.status_code == 200:
                 possible_urls.append(source_url)
             else:
-                _LOGGER.debug("%r is an invalid Github/GitLab URL", source_url)
+                _LOGGER.warning("%r is an invalid Github/GitLab URL", source_url)
         except Exception:
             _LOGGER.exception("Failed to obtain %r with requests.head()", source_url)
 
