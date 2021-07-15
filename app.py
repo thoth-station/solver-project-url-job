@@ -43,9 +43,8 @@ _DATE_FORMAT = "%Y-%m-%d"
 __component_version__ = f"{__version__}+" f"storages.{thoth_storages_version}.common.{thoth_common_version}"
 
 
-def check_url_candidates(url_candidates: List, name: str) -> Dict[str, Any]:
+def check_url_candidates(url_candidates: List, name: str, git_source_repos: Dict[str, Any]) -> Dict[str, Any]:
     """Check URL candidates for any which match GitHub or GitLab."""
-    git_source_repos = {}
     possible_urls = []
     for url in url_candidates:
         if not url:
@@ -79,7 +78,11 @@ def check_url_candidates(url_candidates: List, name: str) -> Dict[str, Any]:
         except Exception:
             _LOGGER.exception("Failed to obtain %r with requests.head()", source_url)
 
-    git_source_repos[name] = possible_urls
+    if possible_urls:
+        if git_source_repos.get(name):
+            git_source_repos[name] = git_source_repos[name].append(possible_urls)
+        else:
+            git_source_repos[name] = possible_urls
     return git_source_repos
 
 
@@ -87,6 +90,7 @@ def get_source_repos(*, start_date: Optional[date], end_date: Optional[date]) ->
     """Get source URLs of github repos."""
     store = SolverResultsStore()
     store.connect()
+    git_source_repos: Dict[str, Any] = {}
     for document_id, doc in store.iterate_results(start_date=start_date, end_date=end_date, include_end_date=True):
         if not doc["result"]["tree"]:
             continue
@@ -100,7 +104,7 @@ def get_source_repos(*, start_date: Optional[date], end_date: Optional[date]) ->
         for url in metadata.get("Project-URL") or []:
             url_candidates.append(url.rsplit(",", maxsplit=1)[-1].strip())
         url_candidates.append(metadata.get("Home-page"))
-        git_source_repos = check_url_candidates(url_candidates, name)
+        git_source_repos = check_url_candidates(url_candidates, name, git_source_repos)
     return git_source_repos  # dictionary
 
 
