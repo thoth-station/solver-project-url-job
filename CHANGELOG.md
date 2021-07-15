@@ -29,3 +29,14 @@ all the things that you see...
 * changed pyproject.toml to contain description and name
 * :arrow_up: Automatic update of dependencies by Kebechet
 * Fix logic to meet desired semantics
+
+## Release 0.1.4 (2021-07-15T17:12:39)
+### Features
+* :arrow_up: Automatic update of dependencies by Kebechet
+* :arrow_up: Automatic update of dependencies by Kebechet
+* Fixed who manages the dependencies
+### Improvements
+* changed debug to warning for invalid Github/Gitlab URL
+* removed soon with thoth resolver
+* changed description of how dependencies are managed
+* updated readme
