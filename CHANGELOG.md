@@ -40,3 +40,7 @@ all the things that you see...
 * removed soon with thoth resolver
 * changed description of how dependencies are managed
 * updated readme
+
+## Release 0.1.5 (2021-07-16T12:56:37)
+### Bug Fixes
+* fixed a bug that was resetting the stored value every iteration
